@@ -1,0 +1,7 @@
+tensorflow-cpu==2.21.0
+tensorflow-datasets==4.9.10
+numpy==2.5.3
+
+# Imported lazily by tensorflow-datasets, so it is not resolved as a
+# transitive dependency and must be pinned explicitly.
+importlib_resources==7.1.0

@@ -1,0 +1,48 @@
+services:
+  api:
+    build: ./backend
+    image: mnist-api
+    restart: unless-stopped
+    volumes:
+      # Artefacts are produced by the training service, never baked into the
+      # image, so retraining does not mean rebuilding.
+      - ./models:/models:ro
+    environment:
+      MODEL_PATH: /models/mnist_classifier.keras
+      SAMPLES_PATH: /models/samples.npz
+    expose:
+      - "8000"
+    ports:
+      # Exposed for curl and the OpenAPI docs at http://localhost:8000/docs.
+      - "8000:8000"
+    networks: [mnist]
+
+  web:
+    build: ./frontend
+    image: mnist-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    networks: [mnist]
+
+  # One-shot: `docker compose run --rm training`
+  training:
+    build: ./training
+    image: mnist-training
+    profiles: [training]
+    volumes:
+      - ./models:/models
+      - tfds:/tfds
+    environment:
+      OUT_DIR: /models
+      TFDS_DATA_DIR: /tfds
+    networks: [mnist]
+
+networks:
+  mnist:
+
+volumes:
+  tfds:
