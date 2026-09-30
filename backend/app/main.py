@@ -7,6 +7,7 @@ import binascii
 
 import cv2
 import numpy as np
+import os
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -24,9 +25,17 @@ app = FastAPI(
 
 # The browser talks to this service through the frontend's nginx proxy in
 # production; CORS is here so `npm run dev` can reach it directly.
+configured_origins = [
+    origin.strip()
+    for origin in os.environ.get('ALLOWED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+if not configured_origins:
+    configured_origins = ['http://localhost:5173', 'http://127.0.0.1:5173']
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:5173', 'http://127.0.0.1:5173'],
+    allow_origins=configured_origins,
     allow_methods=['GET', 'POST'],
     allow_headers=['*'],
 )
